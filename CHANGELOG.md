@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `PROVIDER_HTTP_ENDPOINT` to advance-runner config
 - Added `cartesi/rollups-node` docker image with all node binaries
 - Added completion status to GraphQL API
+- Added rollups-node version to the logs in all services
 
 ### Changed
 
