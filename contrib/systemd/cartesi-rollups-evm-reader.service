@@ -1,0 +1,13 @@
+[Unit]
+Description=Cartesi Rollups EVM Reader Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/cartesi-rollups-evm-reader
+Restart=on-failure
+User=cartesi
+EnvironmentFile=/etc/cartesi/config.env
+
+[Install]
+WantedBy=multi-user.target

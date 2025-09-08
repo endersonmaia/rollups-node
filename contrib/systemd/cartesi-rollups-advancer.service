@@ -1,0 +1,13 @@
+[Unit]
+Description=Cartesi Rollups Advancer Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/cartesi-rollups-advancer
+Restart=on-failure
+User=cartesi
+EnvironmentFile=/etc/cartesi/config.env
+
+[Install]
+WantedBy=multi-user.target
