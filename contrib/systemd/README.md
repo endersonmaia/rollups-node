@@ -36,11 +36,12 @@ Then start each service:
 
 
 ```
-systemctl start cartesi-rollups-env-reader.service
-systemctl start cartesi-rollups-advancer.service
-systemctl start cartesi-rollups-claimer.service
 systemctl start cartesi-inspect.service
 systemctl start cartesi-jsonrpc-api.service
+systemctl start cartesi-rollups-advancer.service
+systemctl start cartesi-rollups-claimer.service
+systemctl start cartesi-rollups-env-reader.service
+systemctl start cartesi-validator.service
 ```
 
 You can follow logs for all services with:
