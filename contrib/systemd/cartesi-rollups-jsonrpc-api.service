@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/cartesi-rollups-jsonrpc
+ExecStart=/usr/bin/cartesi-rollups-jsonrpc-api
 Restart=on-failure
 User=cartesi
 EnvironmentFile=/etc/cartesi/config.env

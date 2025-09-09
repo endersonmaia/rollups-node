@@ -50,7 +50,7 @@ You can follow logs for all services with:
 journalctl -u cartesi-rollups-*.service -f
 ```
 
-## Handling secrts with systemd-creds
+## Handling secrets with systemd-creds
 
 Unless you're using AWS KMS to sign your transactions, you should consider using secrets for `CARTESI_AUTH_PRIVATE_KEY_FILE` or `CARTESI_AUTH_MNEMONIC_FILE`.
 
