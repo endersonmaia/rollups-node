@@ -18,6 +18,7 @@ import (
 	"github.com/cartesi/rollups-node/pkg/service"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type CreateInfo struct {
@@ -25,6 +26,8 @@ type CreateInfo struct {
 	Logger     *slog.Logger
 	EthConn    *ethclient.Client
 	Repository repository.Repository
+	// Metrics, when not nil, receives the cartesi_claimer_* collectors.
+	Metrics prometheus.Registerer
 }
 
 type Service struct {
@@ -61,6 +64,9 @@ type Service struct {
 
 	submissionEnabled bool
 	submissionTimeout time.Duration
+
+	// metrics is nil when no registry was supplied.
+	metrics *claimerMetrics
 }
 
 // defaultMaxAcceptAttempts is used only when config is not supplied, mainly in
@@ -130,6 +136,7 @@ func Create(ctx context.Context, c *CreateInfo) (service.SupervisedService, erro
 	if err != nil {
 		return nil, fmt.Errorf("setting up persistent config: %w", err)
 	}
+	s.metrics = newClaimerMetrics(c.Metrics, chainID.Uint64())
 	s.submissionEnabled = nodeConfig.ClaimSubmissionEnabled
 	s.claimsInFlight = map[int64]inFlightTx{}
 	s.acceptsInFlight = map[int64]inFlightTx{}

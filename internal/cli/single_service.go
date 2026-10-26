@@ -11,6 +11,7 @@ import (
 	"github.com/cartesi/rollups-node/internal/config"
 	"github.com/cartesi/rollups-node/internal/repository"
 	"github.com/cartesi/rollups-node/pkg/service"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +24,7 @@ type SingleServiceOptions struct {
 	MaxStartupTime     time.Duration
 	DatabaseConnection config.SafeURL
 	TelemetryAddress   string
+	Metrics            prometheus.Gatherer // optional; served at /metrics
 	Create             func(context.Context, *slog.Logger, repository.Repository) (service.SupervisedService, error)
 }
 
@@ -45,6 +47,7 @@ func RunSingleService(opts SingleServiceOptions) (runErr error) {
 		BaseConfigs:          service.BaseConfigs{Name: opts.Name, Logger: logger},
 		EnableSignalHandling: true,
 		TelemetryAddress:     opts.TelemetryAddress,
+		Metrics:              opts.Metrics,
 		Factories: []service.FactoryFunction{
 			func(ctx context.Context, sup service.Supervisor) (service.SupervisedService, error) {
 				return opts.Create(ctx, sup.Logger(), repo)

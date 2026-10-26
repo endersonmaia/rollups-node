@@ -44,11 +44,15 @@ package claimer
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/cartesi/rollups-node/internal/errutil"
 )
 
 func (s *Service) Tick(ctx context.Context) (reschedule bool, err error) {
+	start := time.Now()
+	defer func() { s.metrics.observeTick(start, err) }()
+
 	// Classify the complete result once, on every return path. Cancellation can
 	// interrupt claim writes as well as work-selection queries. Keep all causes
 	// when a real failure accompanies shutdown; never hide it behind cancellation.
@@ -137,6 +141,11 @@ func (s *Service) Tick(ctx context.Context) (reschedule bool, err error) {
 	err = errors.Join(err, forecloseErr)
 
 	s.cleanupOrphanedInFlight(computedApps, stagedApps, stagedEpochs)
+	s.metrics.updateGauges(
+		computedApps, submittedApps, stagedApps,
+		computedEpochs, submittedEpochs, stagedEpochs,
+		s.claimsInFlight, s.acceptsInFlight,
+	)
 
 	s.Logger.Debug("Processed claims for epochs",
 		"computed", len(computedEpochs),

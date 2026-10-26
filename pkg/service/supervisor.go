@@ -17,6 +17,7 @@ import (
 
 	"github.com/cartesi/rollups-node/internal/errutil"
 	"github.com/cartesi/rollups-node/internal/version"
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -27,6 +28,8 @@ type SupervisorConfigs struct {
 	Factories            []FactoryFunction
 	EnableSignalHandling bool
 	TelemetryAddress     string
+	// Metrics, when not nil, is exposed at /metrics on the telemetry address.
+	Metrics prometheus.Gatherer
 }
 
 // Supervisor manages multiple services under a single lifecycle.
@@ -87,7 +90,7 @@ func NewSupervisor(ctx context.Context, c *SupervisorConfigs) (Supervisor, error
 	if c.TelemetryAddress != "" {
 		factories = append(factories,
 			func(context.Context, Supervisor) (SupervisedService, error) {
-				return createDefaultTelemetry(s, c.TelemetryAddress), nil
+				return createDefaultTelemetry(s, c.TelemetryAddress, c.Metrics), nil
 			},
 		)
 	}

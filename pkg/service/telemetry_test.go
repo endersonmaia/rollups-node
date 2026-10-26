@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +24,7 @@ func newTelemetryTestService() *telemetryService {
 	}
 	sup.serving.Store(true)
 
-	svc := createDefaultTelemetry(sup, "localhost:0")
+	svc := createDefaultTelemetry(sup, "localhost:0", nil)
 
 	return svc.(*telemetryService)
 }
@@ -145,4 +146,28 @@ func TestReadinessReportsAllFailingServicesWithoutLogging(t *testing.T) {
 	s.Server.Handler.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/readyz", nil))
 	require.Equal(t, http.StatusOK, rr.Code)
 	require.Equal(t, "test/telemetry: ready\n", rr.Body.String())
+}
+
+func TestTelemetry_MetricsEndpoint(t *testing.T) {
+	reg := prometheus.NewRegistry()
+	counter := prometheus.NewCounter(prometheus.CounterOpts{Name: "cartesi_test_total", Help: "test"})
+	reg.MustRegister(counter)
+	counter.Inc()
+
+	sup := &supervisorImpl{Name: "test", logger: discardLogger()}
+	sup.serving.Store(true)
+	s := createDefaultTelemetry(sup, "localhost:0", reg).(*telemetryService)
+
+	rr := httptest.NewRecorder()
+	s.Server.Handler.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	require.Equal(t, http.StatusOK, rr.Code)
+	require.Contains(t, rr.Header().Get("Content-Type"), "text/plain")
+	require.Contains(t, rr.Body.String(), "cartesi_test_total 1")
+}
+
+func TestTelemetry_NoMetricsWithoutGatherer(t *testing.T) {
+	s := newTelemetryTestService()
+	rr := httptest.NewRecorder()
+	s.Server.Handler.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	require.Equal(t, http.StatusNotFound, rr.Code)
 }

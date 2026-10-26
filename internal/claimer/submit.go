@@ -210,6 +210,12 @@ func (s *Service) submitClaimsAndUpdateDatabase(
 			epoch:     currEpoch,
 		}, defaultBlockNumber)
 		transitions += result.progress
+		// A broadcast reports progress too, but the claim is not SUBMITTED until
+		// the transaction is confirmed; that transition is counted by
+		// checkClaimsInFlight.
+		if !s.hasClaimInFlight(key) {
+			s.metrics.observeTransitions(apps[key], metricToSubmitted, result.progress)
+		}
 		if result.err != nil {
 			err = errors.Join(err, result.err)
 		}
@@ -475,6 +481,7 @@ func (s *Service) broadcastComputedClaim(
 		txHash:         txHash,
 		firstSeenBlock: defaultBlockNumber.Uint64(),
 	})
+	s.metrics.observeTxSent(app, metricTxSubmit)
 	return claimProgressed(1)
 }
 

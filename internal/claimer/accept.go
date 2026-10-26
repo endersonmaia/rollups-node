@@ -100,6 +100,7 @@ func (s *Service) acceptClaimsAndUpdateDatabase(
 			epoch:     currEpoch,
 		}, defaultBlockNumber)
 		transitions += result.progress
+		s.metrics.observeTransitions(apps[key], metricToAccepted, result.progress)
 		if result.err != nil {
 			err = errors.Join(err, result.err)
 		}
@@ -437,5 +438,6 @@ func (s *Service) broadcastAcceptClaimOrReconcileRevert(
 		txHash:         txHash,
 		firstSeenBlock: defaultBlockNumber.Uint64(),
 	})
+	s.metrics.observeTxSent(app, metricTxAccept)
 	return claimNoProgress()
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/cartesi/rollups-node/internal/version"
 	"github.com/cartesi/rollups-node/pkg/service"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
 
@@ -77,6 +78,7 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	metrics := prometheus.NewRegistry()
 	return cli.RunSingleService(cli.SingleServiceOptions{
 		Command:            cmd,
 		Name:               config.ServiceClaimer,
@@ -85,8 +87,9 @@ func run(cmd *cobra.Command, args []string) error {
 		MaxStartupTime:     cfg.MaxStartupTime,
 		DatabaseConnection: cfg.DatabaseConnection,
 		TelemetryAddress:   cfg.ClaimerTelemetryAddress,
+		Metrics:            metrics,
 		Create: func(ctx context.Context, logger *slog.Logger, repo repository.Repository) (service.SupervisedService, error) {
-			return claimer.Create(ctx, &claimer.CreateInfo{Config: *cfg, Logger: logger, Repository: repo})
+			return claimer.Create(ctx, &claimer.CreateInfo{Config: *cfg, Logger: logger, Repository: repo, Metrics: metrics})
 		},
 	})
 }

@@ -149,6 +149,7 @@ func (s *Service) stageClaimsAndUpdateDatabase(
 			epoch:     currEpoch,
 		}, defaultBlockNumber)
 		transitions += result.progress
+		s.metrics.observeTransitions(apps[key], metricToStaged, result.progress)
 		if result.err != nil {
 			err = errors.Join(err, result.err)
 		}

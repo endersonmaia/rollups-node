@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const telemetryShutdownTimeout = 5 * time.Second
@@ -18,12 +21,17 @@ type telemetryService struct {
 	serveMux   *http.ServeMux
 }
 
-func createDefaultTelemetry(supervisor Supervisor, addr string) SupervisedService {
+// createDefaultTelemetry serves /readyz and /livez, and also /metrics when
+// metrics is not nil.
+func createDefaultTelemetry(supervisor Supervisor, addr string, metrics prometheus.Gatherer) SupervisedService {
 	s := &telemetryService{supervisor: supervisor}
 
 	s.serveMux = http.NewServeMux()
 	s.serveMux.Handle("/readyz", http.HandlerFunc(s.ReadyHandler))
 	s.serveMux.Handle("/livez", http.HandlerFunc(s.AliveHandler))
+	if metrics != nil {
+		s.serveMux.Handle("/metrics", promhttp.HandlerFor(metrics, promhttp.HandlerOpts{}))
+	}
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(requestIDHeader, "telemetry")

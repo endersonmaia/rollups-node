@@ -64,6 +64,7 @@ func (s *Service) checkClaimsInFlight(
 			epoch: computedEpochs[appID],
 		}, endBlock)
 		confirmed += result.progress
+		s.metrics.observeTransitions(apps[appID], metricToSubmitted, result.progress)
 		if result.drop {
 			delete(computedEpochs, appID)
 		}
@@ -234,6 +235,7 @@ func (s *Service) checkAcceptsInFlight(
 			continue
 		}
 		confirmed += result.progress
+		s.metrics.observeTransitions(apps[appID], metricToAccepted, result.progress)
 		if result.drop {
 			delete(stagedEpochs, appID)
 		}

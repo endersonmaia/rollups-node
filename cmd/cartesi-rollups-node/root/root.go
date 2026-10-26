@@ -19,6 +19,7 @@ import (
 	"github.com/cartesi/rollups-node/internal/version"
 	"github.com/cartesi/rollups-node/pkg/service"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
 
@@ -158,6 +159,9 @@ func run(cmd *cobra.Command, args []string) (runErr error) {
 	)
 	defer machineManager.Close()
 
+	// Claimer metrics are served at /metrics on the node telemetry address.
+	metrics := prometheus.NewRegistry()
+
 	// Create factories of services
 
 	factories := []service.FactoryFunction{
@@ -187,6 +191,7 @@ func run(cmd *cobra.Command, args []string) (runErr error) {
 			return claimer.Create(ctx, &claimer.CreateInfo{
 				Config:     *cfg.ToClaimerConfig(),
 				Repository: repo,
+				Metrics:    metrics,
 			})
 		},
 		func(ctx context.Context, sup service.Supervisor) (service.SupervisedService, error) {
@@ -226,6 +231,7 @@ func run(cmd *cobra.Command, args []string) (runErr error) {
 		BaseConfigs:          service.BaseConfigs{Name: name, Logger: logger},
 		EnableSignalHandling: true,
 		TelemetryAddress:     cfg.NodeTelemetryAddress,
+		Metrics:              metrics,
 		Factories:            factories,
 	}
 	sup, err := service.NewSupervisor(ctx, supCfg)
